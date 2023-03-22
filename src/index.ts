@@ -9,6 +9,10 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import verifyJwt from "./utils/verifyJwt";
 import crypto from "crypto";
+import createHmac from "./utils/createHmac";
+import createAes128Cbc from "./utils/createAes128Cbc";
+import decipher from "./utils/decipher";
+import verifyHmac from "./utils/verifyHmac";
 
 interface EmailPassword {
   email: string;
@@ -59,6 +63,7 @@ fastify.post("/register", async (request, reply) => {
     id: uuidv4(),
     email,
     password: await hashPassword(password),
+    cipher_Key: crypto.randomBytes(16).toString("hex"),
   };
   db.users.push(user);
   return user;
@@ -112,6 +117,68 @@ fastify.post("/post", async (request, reply) => {
   db.posts.push(post);
   return post;
 });
+
+const salt = crypto.randomBytes(16);
+async function test() {
+  const secret = await hashPassword("123456").then((hash) => hash);
+
+  const date = new Date().toISOString();
+
+  const lastRecord = db.posts[0];
+
+  const lastHash = lastRecord ? lastRecord.text : "null";
+
+  console.log("lastHash", lastHash);
+
+  const hmac = createHmac({
+    date,
+    lastHash,
+    message: "123456",
+    secret,
+    salt,
+  });
+
+  console.log("hmac", hmac);
+
+  const criptMessage = createAes128Cbc({
+    date,
+    hmac,
+    message: "123456",
+    prevHash: lastHash,
+    secret,
+    salt,
+  });
+
+  console.log("criptMessage", criptMessage);
+
+  const decrypt = decipher({
+    cipherText: criptMessage,
+    secret,
+    salt,
+  });
+
+  console.log("\n\n\n\n\ndecrypt", decrypt);
+
+  const isValid = verifyHmac({
+    date: decrypt.date,
+    hmac: decrypt.hmac,
+    lastHash: decrypt.prevHash,
+    message: "123456",
+    secret,
+    salt,
+  });
+
+  console.log("\n\nisValid", isValid);
+
+  db.posts.push({
+    id: uuidv4(),
+    text: criptMessage,
+    userId: "123",
+  });
+}
+test();
+console.log("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n-------------");
+test();
 
 const start = async () => {
   try {

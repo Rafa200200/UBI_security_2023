@@ -2,6 +2,7 @@ interface User {
   id: string;
   email: string;
   password: string;
+  cipher_Key: string;
 }
 
 interface Posts {
