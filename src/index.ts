@@ -63,7 +63,7 @@ fastify.post("/register", async (request, reply) => {
     id: uuidv4(),
     email,
     password: await hashPassword(password),
-    cipher_Key: crypto.randomBytes(16).toString("hex"),
+    salt: crypto.randomBytes(16),
   };
   db.users.push(user);
   return user;
@@ -107,78 +107,92 @@ fastify.get("/posts", async (request, reply) => {
   return posts;
 });
 
-fastify.post("/post", async (request, reply) => {
-  const { text } = request.body as { text: string };
-  const post = {
-    id: uuidv4(),
-    text,
-    userId: (request as any).userId,
-  };
-  db.posts.push(post);
-  return post;
+fastify.get("/posts/:id", async (request, reply) => {
+  const { id } = request.params as { id: string };
+  const post = db.posts.find((post) => post.id === id);
+
+  if (!post) {
+    return reply.status(404).send({ message: "Post não encontrado" });
+  }
+
+  const user = db.users.find((user) => user.id === post.userId);
+
+  const decrypted = decipher({
+    cipherText: post.text,
+    secret: user.password,
+    salt: user.salt,
+  });
+
+  const isValid = verifyHmac({
+    date: decrypted.date,
+    hmac: decrypted.hmac,
+    lastHash: decrypted.prevHash,
+    message: decrypted.message,
+    secret: user.password,
+    salt: user.salt,
+  });
+
+  if (!isValid) {
+    return reply.status(401).send({ message: "HMAC inválido" });
+  }
+
+  return decrypted;
 });
 
-const salt = crypto.randomBytes(16);
-async function test() {
-  const secret = await hashPassword("123456").then((hash) => hash);
+fastify.post("/post", async (request, reply) => {
+  const userId = (request as any).userId;
 
-  const date = new Date().toISOString();
+  const user = db.users.find((user) => user.id === userId);
+  const { text } = request.body as { text: string };
 
-  const lastRecord = db.posts[0];
+  const date = new Date();
+
+  const dateString = date.toISOString();
+
+  const userPosts = db.posts.map((post) => {
+    if (post.userId === user.id) {
+      return post;
+    }
+  });
+
+  const postsSorted = userPosts.sort((a, b) => {
+    if (a.createdAt > b.createdAt) return 1;
+    if (a.createdAt < b.createdAt) return -1;
+    return 0;
+  });
+
+  const lastRecord = postsSorted[0];
 
   const lastHash = lastRecord ? lastRecord.text : "null";
 
-  console.log("lastHash", lastHash);
-
   const hmac = createHmac({
-    date,
+    date: dateString,
     lastHash,
-    message: "123456",
-    secret,
-    salt,
+    message: text,
+    secret: user.password,
+    salt: user.salt,
   });
-
-  console.log("hmac", hmac);
 
   const criptMessage = createAes128Cbc({
-    date,
+    date: dateString,
     hmac,
-    message: "123456",
+    message: text,
     prevHash: lastHash,
-    secret,
-    salt,
+    secret: user.password,
+    salt: user.salt,
   });
 
-  console.log("criptMessage", criptMessage);
-
-  const decrypt = decipher({
-    cipherText: criptMessage,
-    secret,
-    salt,
-  });
-
-  console.log("\n\n\n\n\ndecrypt", decrypt);
-
-  const isValid = verifyHmac({
-    date: decrypt.date,
-    hmac: decrypt.hmac,
-    lastHash: decrypt.prevHash,
-    message: "123456",
-    secret,
-    salt,
-  });
-
-  console.log("\n\nisValid", isValid);
-
-  db.posts.push({
+  const post = {
     id: uuidv4(),
     text: criptMessage,
-    userId: "123",
-  });
-}
-test();
-console.log("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n-------------");
-test();
+    userId: user.id,
+    createdAt: date.getTime(),
+  };
+
+  db.posts.push(post);
+
+  return post;
+});
 
 const start = async () => {
   try {

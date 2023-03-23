@@ -2,13 +2,14 @@ interface User {
   id: string;
   email: string;
   password: string;
-  cipher_Key: string;
+  salt: Buffer;
 }
 
 interface Posts {
   id: string;
   text: string;
   userId: string;
+  createdAt: number;
 }
 
 interface DB {
