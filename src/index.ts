@@ -139,8 +139,6 @@ fastify.get("/posts/:id", async (request, reply) => {
 fastify.post("/posts", async (request, reply) => {
   const userId = (request as any).userId;
 
-  console.log("-------", userId);
-
   const user = db.users.find((user) => user.id === userId);
   const { text } = request.body as { text: string };
 
@@ -162,7 +160,7 @@ fastify.post("/posts", async (request, reply) => {
 
   const lastRecord = postsSorted[0];
 
-  const lastHash = lastRecord ? lastRecord.text : "null";
+  const lastHash = lastRecord ? lastRecord.text.split(":")[2] : "null";
 
   const hmac = createHmac({
     date: dateString,

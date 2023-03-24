@@ -22,17 +22,16 @@ export default function createAes128Cbc({
 
   const cipher = crypto.createCipheriv("aes-128-cbc", derivatedSecret, iv);
   let cipherText = cipher.update(
-    `
-    ${prevHash}$
-    ${date}$
-    ${message}$
-    ${hmac}
-  `,
+    `${prevHash}$${date}$${message}$${hmac}`,
     "utf8",
     "hex"
   );
+
   cipherText += cipher.final("hex");
-  const cipherTextWithIv = `${cipherText}:${iv.toString("hex")}`;
+
+  const hash = crypto.createHash("sha256").update(cipherText).digest("hex");
+
+  const cipherTextWithIv = `${cipherText}:${iv.toString("hex")}:${hash}`;
 
   return cipherTextWithIv;
 }
