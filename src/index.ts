@@ -36,24 +36,21 @@ fastify.register(helmet, {
   contentSecurityPolicy: false,
   global: true,
 });
-fastify.register((fastify, opts, done) => {
-  fastify.addHook("preHandler", (req, reply, done) => {
-    if (req.url !== "/login") {
-      const token = req.cookies["@auth"];
-      if (!token) {
-        return reply.status(401).send({ message: "Token não encontrado" });
-      }
 
-      try {
-        const decoded = verifyJwt(token);
-        (req as any).userId = decoded.id;
-      } catch (error) {
-        return reply.status(401).send({ message: "Não autorizado" });
-      }
+fastify.addHook("preHandler", (req, reply, done) => {
+  if (req.url !== "/login") {
+    const token = req.cookies["@auth"];
+    if (!token) {
+      return reply.status(401).send({ message: "Token não encontrado" });
     }
-    done();
-  });
 
+    try {
+      const decoded = verifyJwt(token);
+      (req as any).userId = decoded.id;
+    } catch (error) {
+      return reply.status(401).send({ message: "Não autorizado" });
+    }
+  }
   done();
 });
 
@@ -139,8 +136,10 @@ fastify.get("/posts/:id", async (request, reply) => {
   return decrypted;
 });
 
-fastify.post("/post", async (request, reply) => {
+fastify.post("/posts", async (request, reply) => {
   const userId = (request as any).userId;
+
+  console.log("-------", userId);
 
   const user = db.users.find((user) => user.id === userId);
   const { text } = request.body as { text: string };
@@ -156,8 +155,8 @@ fastify.post("/post", async (request, reply) => {
   });
 
   const postsSorted = userPosts.sort((a, b) => {
-    if (a.createdAt > b.createdAt) return 1;
-    if (a.createdAt < b.createdAt) return -1;
+    if (a.createdAt > b.createdAt) return -1;
+    if (a.createdAt < b.createdAt) return 1;
     return 0;
   });
 
