@@ -9,10 +9,12 @@ export default function decipher({
   cipherText,
   secret,
   salt,
+  cipher_type,
 }: {
   cipherText: string;
   secret: string;
   salt: Buffer;
+  cipher_type: "aes-128-cbc" | "aes-128-ctr";
 }) {
   const [ciphertext, iv] = cipherText.split(":");
 
@@ -22,7 +24,7 @@ export default function decipher({
 
   const derivedKey = derivate({ secret, salt });
 
-  const decipher = crypto.createDecipheriv("aes-128-cbc", derivedKey, ivBuffer);
+  const decipher = crypto.createDecipheriv(cipher_type, derivedKey, ivBuffer);
 
   const decryptedBuffer = decipher.update(ciphertextBuffer);
   let decrypted = decryptedBuffer.toString("utf-8");

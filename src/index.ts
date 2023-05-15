@@ -13,6 +13,7 @@ import createHmac from "./utils/createHmac";
 import createAes128Cbc from "./utils/createAes128Cbc";
 import decipher from "./utils/decipher";
 import verifyHmac from "./utils/verifyHmac";
+import createAes128Ctr from "./utils/createAes128Ctr";
 
 interface EmailPassword {
   email: string;
@@ -38,7 +39,7 @@ fastify.register(helmet, {
 });
 
 fastify.addHook("preHandler", (req, reply, done) => {
-  if (req.url !== "/login") {
+  if (req.url !== "/login" && req.url !== "/register") {
     const token = req.cookies["@auth"];
     if (!token) {
       return reply.status(401).send({ message: "Token não encontrado" });
@@ -55,12 +56,18 @@ fastify.addHook("preHandler", (req, reply, done) => {
 });
 
 fastify.post("/register", async (request, reply) => {
-  const { email, password } = request.body as EmailPassword;
+  const { email, password, hmac_type, cipher_type } =
+    request.body as EmailPassword & {
+      hmac_type: 256 | 512;
+      cipher_type: "aes-128-cbc" | "aes-128-ctr";
+    };
   const user = {
     id: uuidv4(),
     email,
     password: await hashPassword(password),
     salt: crypto.randomBytes(16),
+    hmac_type: hmac_type ?? 256,
+    cipher_type: cipher_type ?? "aes-128-cbc",
   };
   db.users.push(user);
   return user;
@@ -118,6 +125,7 @@ fastify.get("/posts/:id", async (request, reply) => {
     cipherText: post.text,
     secret: user.password,
     salt: user.salt,
+    cipher_type: user.cipher_type,
   });
 
   const isValid = verifyHmac({
@@ -127,6 +135,7 @@ fastify.get("/posts/:id", async (request, reply) => {
     message: decrypted.message,
     secret: user.password,
     salt: user.salt,
+    hmac_type: user.hmac_type,
   });
 
   if (!isValid) {
@@ -168,16 +177,30 @@ fastify.post("/posts", async (request, reply) => {
     message: text,
     secret: user.password,
     salt: user.salt,
+    type: user.hmac_type,
   });
 
-  const criptMessage = createAes128Cbc({
-    date: dateString,
-    hmac,
-    message: text,
-    prevHash: lastHash,
-    secret: user.password,
-    salt: user.salt,
-  });
+  let criptMessage;
+
+  if (user.cipher_type === "aes-128-cbc") {
+    criptMessage = createAes128Cbc({
+      date: dateString,
+      hmac,
+      message: text,
+      prevHash: lastHash,
+      secret: user.password,
+      salt: user.salt,
+    });
+  } else {
+    criptMessage = createAes128Ctr({
+      date: dateString,
+      hmac,
+      message: text,
+      prevHash: lastHash,
+      secret: user.password,
+      salt: user.salt,
+    });
+  }
 
   const post = {
     id: uuidv4(),

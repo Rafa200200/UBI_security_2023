@@ -8,6 +8,7 @@ export default function verifyHmac({
   lastHash,
   date,
   salt,
+  hmac_type,
 }: {
   hmac: string;
   secret: string;
@@ -15,6 +16,7 @@ export default function verifyHmac({
   lastHash: string;
   date: string;
   salt: Buffer;
+  hmac_type: 256 | 512;
 }) {
   try {
     const derivated = derivate({
@@ -23,7 +25,7 @@ export default function verifyHmac({
     });
 
     const hmacToVerify = crypto
-      .createHmac("sha256", derivated)
+      .createHmac(`sha${hmac_type}`, derivated)
       .update(`${lastHash}$${date}$${message}`)
       .digest("hex");
 

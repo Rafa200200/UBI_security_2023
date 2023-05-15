@@ -7,12 +7,14 @@ export default function createHmac({
   lastHash,
   date = new Date().toISOString(),
   salt,
+  type,
 }: {
   secret: string;
   message: string;
   lastHash: string;
   date: string;
   salt: Buffer;
+  type: 256 | 512;
 }) {
   try {
     const derivated = derivate({
@@ -21,7 +23,7 @@ export default function createHmac({
     });
 
     const hmac = crypto
-      .createHmac("sha256", derivated)
+      .createHmac(`sha${type}`, derivated)
       .update(`${lastHash}$${date}$${message}`)
       .digest("hex");
 
