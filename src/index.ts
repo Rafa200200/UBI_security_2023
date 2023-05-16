@@ -32,7 +32,10 @@ fastify.register(cookie, {
   secret: "d78c3bfe-86cb-4c41-98c5-83c5a0748b40",
   parseOptions: {},
 });
-fastify.register(cors, {});
+fastify.register(cors, {
+  origin: ["http://localhost:3000"],
+  credentials: true,
+});
 fastify.register(helmet, {
   contentSecurityPolicy: false,
   global: true,

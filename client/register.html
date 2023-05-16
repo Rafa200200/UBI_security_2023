@@ -14,7 +14,7 @@
     >
       <form
         class="flex flex-col items-center justify-center gap-4 w-full md:w-[520px]"
-        onsubmit="handleLogin(event)"
+        onsubmit="handleRegister(event)"
         method="POST"
       >
         <input type="email" placeholder="E-mail" class="w-full" name="email" />
@@ -24,13 +24,23 @@
           class="w-full"
           name="password"
         />
+        <label for="hmac_type">HMAC</label>
+        <select name="hmac_type" class="w-full">
+          <option value="256">SHA256</option>
+          <option value="512">SHA512</option>
+        </select>
+        <label for="cipher_type">Cifra</label>
+        <select name="cipher_type" class="w-full">
+          <option value="aes-128-cbc">AES-128-CBC</option>
+          <option value="aes-128-ctr">AES-128-CTR</option>
+        </select>
         <button type="submit" class="w-full bg-cyan-500 text-white p-2">
-          Login
+          Registro
         </button>
       </form>
 
-      <a href="register.html" class="text-cyan-500 mt-4">
-        Não tem uma conta? Registre-se
+      <a href="index.html" class="text-cyan-500 mt-4">
+        Já tem uma conta? Faça login
       </a>
     </div>
   </body>

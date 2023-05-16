@@ -8,5 +8,52 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
     <script src="index.js"></script>
   </head>
-  <body></body>
+  <body>
+    <div
+      class="w-full flex flex-row items-center justify-end p-4 shadow-lg mb-4"
+    >
+      <button
+        onclick="handleLogout()"
+        class="bg-red-500 text-white p-2 w-[100px] rounded-md"
+      >
+        Sair
+      </button>
+    </div>
+    <div
+      class="w-full grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-screen items-center justify-center"
+    >
+      <div
+        class="w-full flex flex-col items-start border-r-gray-400 border-r h-full"
+        id="texts"
+      >
+        <h2 class="text-xl font-bold">Seus Textos Cifrados</h2>
+      </div>
+      <div class="w-full flex flex-col items-start h-full">
+        <h2 class="text-xl font-bold">Criar um novo texto</h2>
+        <form
+          class="flex flex-col items-center gap-4"
+          method="POST"
+          onsubmit="handleCreatePost(event)"
+        >
+          <textarea
+            type="text"
+            placeholder="Texto para cifrar"
+            class="w-full"
+            name="text"
+          ></textarea>
+          <button type="submit" class="w-full bg-cyan-500 text-white p-2">
+            Criar e Cifrar
+          </button>
+        </form>
+      </div>
+      <div
+        class="w-full flex flex-col items-start border-l-gray-400 border-l h-full"
+      >
+        <h2 class="text-xl font-bold">Texto Decifrado</h2>
+        <p class="text-lg break-all" id="clean-text">
+          Selecione um texto para ler
+        </p>
+      </div>
+    </div>
+  </body>
 </html>
