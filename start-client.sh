@@ -1,2 +1,1 @@
-npm install;
-npx serve ./client;
+npm install && npx serve ./client;
