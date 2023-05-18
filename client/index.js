@@ -1,4 +1,4 @@
-const SERVER_URL = "http://localhost:3333";
+const SERVER_URL = "https://localhost:3333";
 
 async function postRequest(url, body) {
   const response = await fetch(`${SERVER_URL}${url}`, {

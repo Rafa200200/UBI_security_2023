@@ -14,6 +14,8 @@ import createAes128Cbc from "./utils/createAes128Cbc";
 import decipher from "./utils/decipher";
 import verifyHmac from "./utils/verifyHmac";
 import createAes128Ctr from "./utils/createAes128Ctr";
+import https from "https";
+import fs from "fs";
 
 interface EmailPassword {
   email: string;
@@ -26,9 +28,14 @@ export interface JwtType {
 
 const fastify = Fastify({
   logger: true,
+  https: {
+    key: fs.readFileSync("key.pem"),
+    cert: fs.readFileSync("cert.pem"),
+  },
 });
 
 fastify.register(cookie, {
+  // file deepcode ignore HardcodedNonCryptoSecret: Fake data
   secret: "d78c3bfe-86cb-4c41-98c5-83c5a0748b40",
   parseOptions: {},
 });
@@ -42,7 +49,12 @@ fastify.register(helmet, {
 });
 
 fastify.addHook("preHandler", (req, reply, done) => {
-  if (req.url !== "/login" && req.url !== "/register") {
+  if (
+    req.url !== "/login" &&
+    req.url !== "/register" &&
+    req.url !== "/hack" &&
+    req.url !== "/teste"
+  ) {
     const token = req.cookies["@auth"];
     if (!token) {
       return reply.status(401).send({ message: "Token não encontrado" });
@@ -56,6 +68,10 @@ fastify.addHook("preHandler", (req, reply, done) => {
     }
   }
   done();
+});
+
+fastify.get("/teste", async (request, reply) => {
+  return { message: "Teste realizado com sucesso" };
 });
 
 fastify.post("/register", async (request, reply) => {
@@ -100,6 +116,14 @@ fastify.post("/login", async (request, reply) => {
   });
 
   return { message: "Login realizado com sucesso" };
+});
+
+fastify.get("/hack", async (request, reply) => {
+  // change 1 bit on the post.text
+  db.posts[db.posts.length - 1].text = db.posts[
+    db.posts.length - 1
+  ].text.replace("a", "b");
+  return { message: "Hack realizado com sucesso" };
 });
 
 fastify.delete("/logout", async (request, reply) => {
