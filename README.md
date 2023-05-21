@@ -49,3 +49,5 @@ Obs:
 - URL do server: http://localhost:3333
 - URL do client: http://localhost:3000
 - O server deve ser executado antes do client
+- O arquivo Insominia_2023-03-24.json contem as rotas do server para serem importadas no Insomnia (concorrente do Postman) e testadas. Basta importar o arquivo no Insomnia e executar as rotas enquanto o servidor estiver executando.
+- No insomniae e no código, pode-se ver uma rota chamada "Hack". Esta rota simula uma alteração no banco de dados, alterando um byte do texto criptografado. Quando um texto é alterado, se o usuário tentar descriptografar o texto, o mesmo não será descriptografado, pois o HMAC não será mais válido.
