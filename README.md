@@ -23,6 +23,25 @@ $ ./start-client.sh
 
 6. Acesse o client em http://localhost:3000
 
+### Windows
+
+Caso nao tenha o wsl instalado, tenha certeza de que possui no node e o npm instalados.
+Execute:
+
+Para iniciar o servidor:
+
+```bash
+  $ npm install
+  $ npm run dev
+```
+
+Para iniciar o client:
+
+```bash
+  $ npm install
+  $ npx serve ./client
+```
+
 Obs:
 
 - O client e o server devem ser executados em terminais separados
