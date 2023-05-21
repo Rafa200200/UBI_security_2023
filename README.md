@@ -1,8 +1,12 @@
+# UBI_security_2023
+
+GIT do projeto: [link](https://github.com/HenriqueRamos13/UBI_security_2023)
+
 Como rodar o projeto:
 
 1. Tenha o NodeJs instalado
 2. Tenha o NPM instalado
-3. De permissoes de execucao para o arquivo start-client.sh e start-server.sh
+3. Conceda permissoes de execucao para o arquivo start-client.sh e start-server.sh
 
 ```bash
 $ chmod +x start-client.sh
