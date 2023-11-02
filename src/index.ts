@@ -120,6 +120,35 @@ fastify.get("/posts", async (request, reply) => {
   const posts = db.posts.filter(
     (post) => post.userId === (request as any).userId
   );
+
+  const user = db.users.find((user) => user.id === (request as any).userId);
+
+  posts.forEach((post) => {
+    // verify the hmac if is invalid add a flag invalid:true to the post
+    const decrypted = decipher({
+      cipherText: post.text,
+      secret: user.password,
+      salt: user.salt,
+      cipher_type: user.cipher_type,
+    });
+
+    const isValid = verifyHmac({
+      date: decrypted.date,
+      hmac: decrypted.hmac,
+      lastHash: decrypted.prevHash ?? "null",
+      message: decrypted.message,
+      secret: user.password,
+      salt: user.salt,
+      hmac_type: user.hmac_type,
+    });
+
+    if (!isValid) {
+      (post as any).invalid = true;
+    }
+
+    return post;
+  });
+
   return posts;
 });
 
@@ -143,7 +172,7 @@ fastify.get("/posts/:id", async (request, reply) => {
   const isValid = verifyHmac({
     date: decrypted.date,
     hmac: decrypted.hmac,
-    lastHash: decrypted.prevHash,
+    lastHash: decrypted.prevHash ?? "null",
     message: decrypted.message,
     secret: user.password,
     salt: user.salt,
@@ -182,6 +211,8 @@ fastify.post("/posts", async (request, reply) => {
   const lastRecord = postsSorted[0];
 
   const lastHash = lastRecord ? lastRecord.text.split(":")[2] : "null";
+
+  console.log(1111, lastHash);
 
   const hmac = createHmac({
     date: dateString,

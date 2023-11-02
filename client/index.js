@@ -109,6 +109,11 @@ function createPostHtml(post) {
       <button onclick="handleGetPostById('${
         post.id
       }')" class="p-2 bg-green-400 w-full text-white">Decifrar</button>
+      ${
+        post.invalid === true
+          ? `<p class="text-red-500">HMAC inválido. O texto foi comprometido ou modificado.</p>`
+          : `<p class="text-green-500">HMAC válido. O texto não foi comprometido ou modificado.</p>`
+      }
     </div>
   `;
 }
@@ -148,3 +153,7 @@ function start() {
 }
 
 start();
+
+function hack() {
+  getRequest("/hack").then((data) => {});
+}
